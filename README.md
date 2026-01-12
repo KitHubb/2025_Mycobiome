@@ -61,8 +61,4 @@ bash scripts/bash/03_subsample_repli10.sh
 
 
 ### 2) R env
-
-```{r}
-
-
-```
+`260112_dada2.Rmd` 참고 
