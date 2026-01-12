@@ -3,6 +3,29 @@
 This repository contains Linux (bash) and R scripts for simulated NGS Datasets ITS-based fungal microbiome analysis.
 
 
+## Directory 
+
+```
+ITS_simulation_pipeline/
+├── README.md
+├── scripts/                 # bash pipeline
+│   └── bash/
+│       ├── 01_make_simul_fastq.sh
+│       ├── 02_extract_ITS.sh
+│       └── 03_subsample_repli10.sh
+├── data/
+│   ├── input/               # FASTA, abundance.tsv
+│   ├── simul_fastq/         # gitignore
+│   ├── its_extracted/       # gitignore
+│   ├── subsampled/          # gitignore
+│   │
+└── Rproj_simul/            # ⭐ R 분석 메인
+    ├── Rproj_simul.Rproj
+    ├── 260112_dada2.Rmd
+    ├── Figure/
+    └── Phyloseq/
+```
+
 ## Requirements
 
 ### OS
@@ -38,8 +61,8 @@ bash scripts/bash/03_subsample_repli10.sh
 
 
 ### 2) R env
-```{r}
-Rscript scripts/R/02_dada2.R
 
-Rscript scripts/R/03_analysis.R
+```{r}
+
+
 ```
