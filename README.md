@@ -39,8 +39,8 @@ ITS_simulation_pipeline/
 - phyloseq
 - ggplot2
 ### Reference
-- UNITE (v10.0) - general fasta sequence
-- Custom DB (MSA-1010) - ITS
+- UNITE (ver10.0_20240404_Fungi2) - `sh_general_release_dynamic_s_04.04.2024.fasta`
+- Custom DB (MSA-1010) - `data/reference/Reference_MSA-1010`
 
 ## Work flow 
 ### 1) Conda (Linux tools)
