@@ -67,6 +67,7 @@ run_cutadapt () {
     -a "${REV}" \
     --discard-untrimmed \
     --match-read-wildcards \
+    -m 50 \
     -o "${OUTDIR}/${REGION}_10M_${VERSION}_R1.fastq" \
     -p "${OUTDIR}/${REGION}_10M_${VERSION}_R2.fastq" \
     "${INDIR}/ITS_300bp_10M_${VERSION}_R1.fastq" \

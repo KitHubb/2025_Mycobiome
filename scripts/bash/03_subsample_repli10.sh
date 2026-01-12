@@ -52,7 +52,7 @@ run_subsample () {
   local IN_R1="${INDIR}/${REGION}_10M_${VERSION}_R1.fastq"
   local IN_R2="${INDIR}/${REGION}_10M_${VERSION}_R2.fastq"
 
-  local OUTDIR_SUB="${OUTDIR}/${REGION}/${VERSION}/seed${SEED}"
+  local OUTDIR_SUB="${OUTDIR}"
   mkdir -p "${OUTDIR_SUB}"
 
   echo "[INFO] Subsampling ${REGION} ${VERSION} (seed=${SEED})"
