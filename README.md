@@ -24,15 +24,15 @@ This repository contains Linux (bash) and R scripts for simulated NGS Datasets I
 ```
 # 1. insilicoseq기반 가상 서열 생산
 conda activate insilicoseq
-bash ./01_make_simul_fastq.sh
+bash scripts/bash/01_make_simul_fastq.sh
 
 # 2. ITS 영역 추출 (cutadapt)
 conda activate cutadpat
-bash ./02_extract_ITS.sh
+bash scripts/bash/02_extract_ITS.sh
 
 # 3. Subsampling  (BBtools)
 conda activate bbtools
-bash ./03_subsample_repli10.sh
+bash scripts/bash/03_subsample_repli10.sh
 ```
 
 
