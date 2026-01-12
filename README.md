@@ -17,9 +17,9 @@ ITS_simulation_pipeline/
 │   ├── input/               # FASTA, abundance.tsv
 │   ├── simul_fastq/         # gitignore
 │   ├── its_extracted/       # gitignore
-│   ├── subsampled/          # gitignore
-│   │
-└── Rproj_simul/            # ⭐ R 분석 메인
+│   └── subsampled/          # gitignore
+│    
+└── Rproj_simul/             
     ├── Rproj_simul.Rproj
     ├── 260112_dada2.Rmd
     ├── Figure/
