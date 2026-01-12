@@ -22,7 +22,7 @@ ITS_simulation_pipeline/
 └── Rproj_simul/             
     ├── Rproj_simul.Rproj
     ├── 260112_dada2.Rmd
-    ├── Figure/
+    ├── Figures/
     └── Phyloseq/
 ```
 
