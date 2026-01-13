@@ -59,8 +59,8 @@ ITS_simulation_pipeline/
    subsampling-induced stochasticity를 평가하기 위해
    서로 다른 random seed를 사용한 10회의 반복 subsampling을 수행
 
-4. Subsampled FASTQ에 대해 DADA2를 이용하여 ASV 추론을 수행하였으며,
-   replicate 간 ASV 구성 및 변동성을 비교 분석
+4. Subsampled FASTQ에 대해 DADA2를 이용하여 ASV 추론을 수행, UNITE 및 customDB를 기반으로 계통 분류
+    - replicate 간 Genus 구성 및 변동성을 비교
 
 
 ### 1) Conda (Linux tools)
