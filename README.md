@@ -34,10 +34,14 @@ ITS_simulation_pipeline/
 - cutadapt ≥ 4.9
 - QIIME2 ≥ 2024.2
 - R ≥ 4.4
+- BBtools ≥ 37
+  
 ### R packages
 - dada2
 - phyloseq
 - ggplot2
+
+
 ### Reference
 - UNITE (ver10.0_20240404_Fungi2) - `sh_general_release_dynamic_s_04.04.2024.fasta`
 - Custom DB (MSA-1010) - `data/reference/Reference_MSA-1010`
