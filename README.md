@@ -22,8 +22,9 @@ ITS_simulation_pipeline/
 └── Rproj_simul/             
     ├── Rproj_simul.Rproj
     ├── 260112_dada2.Rmd
-    ├── Figures/
-    └── Phyloseq/
+    ├── Rds / # dada2 result
+    ├── Figures/  # error model  + taxonomy composition 
+    └── Phyloseq/ # version 0, 3
 ```
 
 ## Requirements
