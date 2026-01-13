@@ -1,0 +1,736 @@
+---
+title: "260112_dada2"
+author: "So-Yeon Kim"
+date: "2026-01-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Import data
+- https://benjjneb.github.io/dada2/tutorial.html
+
+```{r}
+library(dada2); packageVersion("dada2")
+library(dplyr); packageVersion("dplyr")
+library(phyloseq); packageVersion("phyloseq")
+
+
+## ITS1 
+list.files( "../data/subsampled/")
+path = "../data/subsampled/"
+
+
+# Forward and reverse fastq filenames have format: SAMPLENAME_R1_001.fastq and SAMPLENAME_R2_001.fastq
+fnFs <- sort(list.files(path, pattern="_R1.sub.fastq", full.names = TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.sub.fastq", full.names = TRUE))
+
+# Extract sample names, assuming filenames have format: SAMPLENAME_XXX.fastq
+sample.names <- sapply(strsplit(basename(fnFs), "_R"), `[`, 1)
+
+
+fig_path = "./Figures/"
+dir.create(fig_path)
+
+# png(paste0(fig_path, "Quality.png"))
+# plotQualityProfile(c(fnFs[1], fnRs[1] ))
+# dev.off()
+
+
+```
+
+
+# 2. Dada2 pipeline 
+## 1) Make new dir 
+```{r}
+
+### Filter and trim ### ---------------------------------------------------------
+filtFs0 <- file.path(path, "filtered", paste0(sample.names, "_0F_filt.fastq.gz"))
+filtRs0 <- file.path(path, "filtered", paste0(sample.names, "_0R_filt.fastq.gz"))
+names(filtFs0) <- sample.names
+names(filtRs0) <- sample.names
+
+
+filtFs1 <- file.path(path, "filtered", paste0(sample.names, "_1F_filt.fastq.gz"))
+filtRs1 <- file.path(path, "filtered", paste0(sample.names, "_1R_filt.fastq.gz"))
+names(filtFs1) <- sample.names
+names(filtRs1) <- sample.names
+
+
+filtFs2 <- file.path(path, "filtered", paste0(sample.names, "_2F_filt.fastq.gz"))
+filtRs2 <- file.path(path, "filtered", paste0(sample.names, "_2R_filt.fastq.gz"))
+names(filtFs2) <- sample.names
+names(filtRs2) <- sample.names
+
+
+
+filtFs3 <- file.path(path, "filtered", paste0(sample.names, "_3F_filt.fastq.gz"))
+filtRs3 <- file.path(path, "filtered", paste0(sample.names, "_3R_filt.fastq.gz"))
+names(filtFs3) <- sample.names
+names(filtRs3) <- sample.names
+
+```
+
+## 2) Filter and Trim
+
+```{r}
+## 입력 FASTQ 파일 (공통)
+fnFs_list  <- list(fnFs, fnFs, fnFs, fnFs)
+fnRs_list  <- list(fnRs, fnRs, fnRs, fnRs)
+
+## 출력 FASTQ 파일
+filtFs_list <- list(filtFs0, filtFs1, filtFs2, filtFs3)
+filtRs_list <- list(filtRs0, filtRs1, filtRs2, filtRs3)
+
+## replicate별 maxEE 설정
+maxEE_list <- list(
+  NULL,        # out0 : maxEE 미적용
+  c(2, 2),     # out1
+  c(3, 3),     # out2
+  c(2, 4)      # out3
+)
+
+out_path <- "./Rds/"
+
+```
+
+
+```{r}
+
+
+set.seed(1)
+
+for (i in seq_along(filtFs_list)) {
+
+  message("Running filterAndTrim: replicate ", i-1)
+
+  ## filterAndTrim 인자 구성
+  ft_args <- list(
+    fwd = fnFs_list[[i]],
+    filt = filtFs_list[[i]],
+    rev = fnRs_list[[i]],
+    filt.rev = filtRs_list[[i]],
+    trimLeft = c(10, 10),
+    maxN = 0,
+    truncQ = 2,
+    rm.phix = TRUE,
+    compress = TRUE
+  )
+
+  ## replicate별 maxEE 적용
+  if (!is.null(maxEE_list[[i]])) {
+    ft_args$maxEE <- maxEE_list[[i]]
+  }
+
+  ## 실행
+  out <- do.call(filterAndTrim, ft_args)
+
+  ## 콘솔 출력
+  print(out)
+
+  ## 결과 저장
+  saveRDS(out,
+          file = paste0(out_path, "260112_out", i-1, "_10rep.rds"))
+}
+
+```
+
+
+
+```{r}
+# # Mon Jan 12 17:55:53 2026 ------------------------------
+# set.seed(1)
+# out0 <- filterAndTrim(fnFs, filtFs0,
+#                       fnRs, filtRs0,
+#                       trimLeft = c(10,10), 
+#                       maxN=0,
+#                       truncQ=2,
+#                       rm.phix=TRUE,
+#                       compress=TRUE
+#                       )
+# out0
+# saveRDS(out0, "./Phyloseq/260112_out0_10rep.rds")
+# 
+# 
+# set.seed(1)
+# out1 <- filterAndTrim(fnFs, filtFs1,
+#                       fnRs, filtRs1,
+#                       trimLeft = c(10,10), 
+#                       maxN=0,
+#                       maxEE=c(2,2),
+#                       truncQ=2,
+#                       rm.phix=TRUE,
+#                       compress=TRUE
+#                       )
+# out1
+# saveRDS(out1, "./Phyloseq/260112_out1_10rep.rds")
+# 
+# 
+# 
+# set.seed(1)
+# out2 <- filterAndTrim(fnFs, filtFs2,
+#                       fnRs, filtRs2,
+#                       trimLeft = c(10,10), 
+#                       maxN=0,
+#                       maxEE=c(3,3),
+#                       truncQ=2,
+#                       rm.phix=TRUE,
+#                       compress=TRUE
+#                       )
+# out2
+# saveRDS(out1, "./Phyloseq/260112_out2_10rep.rds")
+# 
+# 
+# 
+# set.seed(1)
+# out3 <- filterAndTrim(fnFs, filtFs3,
+#                       fnRs, filtRs3,
+#                       trimLeft = c(10,10), 
+#                       maxN=0,
+#                       maxEE=c(2,4),
+#                       truncQ=2,
+#                       rm.phix=TRUE,
+#                       compress=TRUE
+#                       )
+# out3
+# saveRDS(out3, "./Phyloseq/260112_out3_10rep.rds")
+
+
+```
+
+
+
+## 3) Learn error rate 
+
+```{r}
+
+set.seed(1)
+
+
+filtFs_list <- list(filtFs0, filtFs1, filtFs2, filtFs3)
+filtRs_list <- list(filtRs0, filtRs1, filtRs2, filtRs3)
+
+out_path  <- "./Rds/"
+fig_path  <- "./Figures"
+```
+
+
+```{r}
+for (i in seq_along(filtFs_list)) {
+
+  message("Processing read set: ", i)
+
+  ## error model 학습
+  errF <- learnErrors(filtFs_list[[i]], multithread = TRUE)
+  errR <- learnErrors(filtRs_list[[i]], multithread = TRUE)
+
+  ## error model 저장
+  saveRDS(errF,
+          file = paste0(out_path, "260112_errF", i-1, "_10rep.rds"))
+  saveRDS(errR,
+          file = paste0(out_path, "260112_errR", i-1, "_10rep.rds"))
+
+  ## Forward error plot
+  png(paste0(fig_path, "error_model_read", i-1, "_F.png"))
+  plotErrors(errF, nominalQ = TRUE)
+  dev.off()
+
+  ## Reverse error plot
+  png(paste0(fig_path, "error_model_read", i-1, "_R.png"))
+  plotErrors(errR, nominalQ = TRUE)
+  dev.off()
+}
+
+
+```
+
+```{r}
+# png("./Figures/error_model0.png", width = 10, height = 6, units = "in", res = 300)
+# plotErrors(errF0, nominalQ=TRUE)+plotErrors(errR0, nominalQ=TRUE)  
+# dev.off()
+# 
+# png("./Figures/error_model1.png", width = 10, height = 6, units = "in", res = 300)
+# plotErrors(errF1, nominalQ=TRUE)+
+#   plotErrors(errR1, nominalQ=TRUE)  
+# dev.off()
+# 
+# png("./Figures/error_model2.png", width = 10, height = 6, units = "in", res = 300)
+# plotErrors(errF2, nominalQ=TRUE) + 
+#   plotErrors(errR2, nominalQ=TRUE)  
+# dev.off()
+# 
+# png("./Figures/error_model3.png", width = 10, height = 6, units = "in", res = 300)
+# plotErrors(errF3, nominalQ=TRUE)+
+#   plotErrors(errR3, nominalQ=TRUE)  
+# dev.off()
+```
+
+
+## 4)  Sample Inference
+
+```{r}
+library(patchwork)
+
+## error model (앞에서 생성된 것)
+errF0 <- readRDS("./Rds/260112_errF0_10rep.rds")
+errR0 <- readRDS("./Rds/260112_errR0_10rep.rds")
+
+errF1 <- readRDS("./Rds/260112_errF1_10rep.rds")
+errR1 <- readRDS("./Rds/260112_errR1_10rep.rds")
+
+errF2 <- readRDS("./Rds/260112_errF2_10rep.rds")
+errR2 <- readRDS("./Rds/260112_errR2_10rep.rds")
+
+errF3 <- readRDS("./Rds/260112_errF3_10rep.rds")
+errR3 <- readRDS("./Rds/260112_errR3_10rep.rds")
+
+
+errF_list <- list(errF0, errF1, errF2, errF3)
+errR_list <- list(errR0, errR1, errR2, errR3 )
+
+## 결과 저장 경로
+out_path <- "./Rds/"
+```
+
+
+```{r}
+
+set.seed(1)
+
+for (i in seq_along(filtFs_list)) {
+
+  message("Running DADA2 denoising: read set ", i)
+
+  ## Forward denoising
+  dadaF <- dada(filtFs_list[[i]],
+                err = errF_list[[i]])
+
+  ## Reverse denoising
+  dadaR <- dada(filtRs_list[[i]],
+                err = errR_list[[i]])
+
+  ## 결과 저장
+  saveRDS(dadaF,
+          file = paste0(out_path, "260112_dadaFs", i-1, "_10rep.rds"))
+  saveRDS(dadaR,
+          file = paste0(out_path, "260112_dadaRs", i-1, "_10rep.rds"))
+}
+```
+
+
+
+
+## 5) Merge paired reads
+```{r}
+## error model (앞에서 생성된 것)
+dadaFs0 <- readRDS("./Rds/260112_dadaFs0_10rep.rds")
+dadaRs0 <- readRDS("./Rds/260112_dadaRs0_10rep.rds")
+
+dadaFs1 <- readRDS("./Rds/260112_dadaFs1_10rep.rds")
+dadaRs1 <- readRDS("./Rds/260112_dadaRs1_10rep.rds")
+
+dadaFs2 <- readRDS("./Rds/260112_dadaFs2_10rep.rds")
+dadaRs2 <- readRDS("./Rds/260112_dadaRs2_10rep.rds")
+
+dadaFs3 <- readRDS("./Rds/260112_dadaFs3_10rep.rds")
+dadaRs3 <- readRDS("./Rds/260112_dadaRs3_10rep.rds")
+
+## dada 결과
+dadaFs_list <- list(dadaFs0, dadaFs1, dadaFs2, dadaFs3)
+dadaRs_list <- list(dadaRs0, dadaRs1, dadaRs2, dadaRs3)
+
+
+set.seed(1)
+
+out_path <- "./RDS/"
+
+for (i in seq_along(dadaFs_list)) {
+
+  message("Running mergePairs: replicate ", i-1)
+
+  mergers <- mergePairs(dadaFs_list[[i]],
+                         filtFs_list[[i]],
+                         dadaRs_list[[i]],
+                         filtRs_list[[i]])
+
+  ## 필요 시 확인
+  # print(head(mergers[[1]]))
+
+  ## 결과 저장
+  saveRDS(mergers,
+          file = paste0(out_path, "260112_mergers", i-1, "_10rep.rds"))
+}
+
+```
+
+
+## 6) Construct sequence table
+```{r}
+mergers0 <- readRDS("./Rds/260112_mergers0_10rep.rds")
+mergers1 <- readRDS("./Rds/260112_mergers1_10rep.rds")
+mergers2 <- readRDS("./Rds/260112_mergers2_10rep.rds")
+mergers3 <- readRDS("./Rds/260112_mergers3_10rep.rds")
+
+mergers_list <- list(
+  mergers0,
+  mergers1,
+  mergers2,
+  mergers3
+)
+
+
+seqtab_list        <- vector("list", length(mergers_list))
+seqtab_nochim_list <- vector("list", length(mergers_list))
+
+for (i in seq_along(mergers_list)) {
+
+  message("Processing sequence table: version ", i-1)
+
+  ## ASV table 생성
+  seqtab <- makeSequenceTable(mergers_list[[i]])
+  cat("seqtab dim (v", i-1, "): ", dim(seqtab), "\n", sep = "")
+  
+  ## Chimera 제거
+  seqtab.nochim <- removeBimeraDenovo(
+    seqtab,
+    method      = "consensus",
+    multithread = TRUE,
+    verbose     = TRUE
+  )
+
+  cat("seqtab.nochim dim (v", i-1, "): ",
+      dim(seqtab.nochim), "\n", sep = "")
+
+  ## Chimera 제거 후 retention 비율
+  cat("Retention ratio (v", i-1, "): ",
+      round(sum(seqtab.nochim) / sum(seqtab), 4), "\n\n", sep = "")
+
+  ## 리스트에 저장
+  seqtab_list[[i]]        <- seqtab
+  seqtab_nochim_list[[i]] <- seqtab.nochim
+}
+
+seqtab0        <- seqtab_list[[1]]
+seqtab1        <- seqtab_list[[2]]
+seqtab2        <- seqtab_list[[3]]
+seqtab3        <- seqtab_list[[4]]
+
+seqtab.nochim0 <- seqtab_nochim_list[[1]]
+seqtab.nochim1 <- seqtab_nochim_list[[2]]
+seqtab.nochim2 <- seqtab_nochim_list[[3]]
+seqtab.nochim3 <- seqtab_nochim_list[[4]]
+
+
+```
+
+
+
+## 7) Track reads through the pipeline
+
+```{r}
+getN <- function(x) sum(getUniques(x))
+```
+
+
+```{r}
+
+## filterAndTrim 결과
+out0 <- readRDS(file = paste0(out_path, "260112_out0_10rep.rds"))
+out1 <- readRDS(file = paste0(out_path, "260112_out1_10rep.rds"))
+out2 <- readRDS(file = paste0(out_path, "260112_out2_10rep.rds"))
+out3 <- readRDS(file = paste0(out_path, "260112_out3_10rep.rds"))
+out_list <- list(out0, out1, out2, out3)
+
+
+  
+## dada 결과
+dadaFs_list <- list(dadaFs0, dadaFs1, dadaFs2, dadaFs3)
+dadaRs_list <- list(dadaRs0, dadaRs1, dadaRs2, dadaRs3)
+
+## mergePairs 결과
+mergers_list <- list(mergers0, mergers1, mergers2, mergers3)
+
+## chimera 제거 후 seqtab
+seqtab_nochim_list <- list(
+  seqtab.nochim0,
+  seqtab.nochim1,
+  seqtab.nochim2,
+  seqtab.nochim3
+)
+
+## 저장 경로
+out_path <- "./RDS/"
+
+```
+
+
+```{r}
+track_list <- vector("list", length(out_list))
+
+for (i in seq_along(out_list)) {
+
+  message("Generating read tracking table: version ", i-1)
+
+  track <- cbind(
+    out_list[[i]],
+    sapply(dadaFs_list[[i]], getN),
+    sapply(dadaRs_list[[i]], getN),
+    sapply(mergers_list[[i]], getN),
+    rowSums(seqtab_nochim_list[[i]])
+  )
+
+  colnames(track) <- c(
+    "input",
+    "filtered",
+    "denoisedF",
+    "denoisedR",
+    "merged",
+    "nonchim"
+  )
+
+  rownames(track) <- sample.names
+
+  ## 콘솔 확인
+  print(track)
+
+  ## 저장
+  saveRDS(
+    track,
+    file = paste0(out_path, "260112_track", i-1, "_10rep.rds")
+  )
+
+  track_list[[i]] <- track
+}
+
+track0 <- track_list[[1]]
+track1 <- track_list[[2]]
+track2 <- track_list[[3]]
+track3 <- track_list[[4]]
+
+
+```
+
+# 3. Taxonomy classification 
+
+```{r}
+
+## chimera 제거 후 seqtab (version 0–3)
+seqtab_nochim_list <- list(
+  seqtab.nochim0,
+  seqtab.nochim1,
+  seqtab.nochim2,
+  seqtab.nochim3
+)
+
+## reference fasta 파일
+ref_list <- list(
+  # unite  = "D:/KSY/Reference/dada2/UNITE/UNITE_ver10.0_20240404_Fungi2/sh_general_release_s_04.04.2024/sh_general_release_dynamic_s_04.04.2024.fasta",
+  custom = "../data/reference/Reference_MSA-1010.fas"
+)
+
+## 결과 저장 경로
+out_path <- "./RDS/"
+
+```
+
+
+```{r}
+taxa_list <- list()
+
+for (ref_name in names(ref_list)) {
+
+  message("Assigning taxonomy using reference: ", ref_name)
+
+  for (i in seq_along(seqtab_nochim_list)) {
+
+    message("  - Processing version ", i-1)
+
+    taxa <- assignTaxonomy(
+      seqtab_nochim_list[[i]],
+      ref_list[[ref_name]],
+      multithread = TRUE )
+
+    saveRDS( taxa, file = paste0( out_path, "260112_taxa", i-1, "_", ref_name, "_10rep.rds" ) 
+             )
+
+    taxa_list[[paste0("v", i-1, "_", ref_name)]] <- taxa
+  }
+}
+
+## UNITE
+taxa0_unite <- taxa_list[["v0_unite"]]
+taxa1_unite <- taxa_list[["v1_unite"]]
+taxa2_unite <- taxa_list[["v2_unite"]]
+taxa3_unite <- taxa_list[["v3_unite"]]
+
+## Custom reference
+taxa0_custom <- taxa_list[["v0_custom"]]
+taxa1_custom <- taxa_list[["v1_custom"]]
+taxa2_custom <- taxa_list[["v2_custom"]]
+taxa3_custom <- taxa_list[["v3_custom"]]
+
+
+```
+
+```{r}
+
+
+```
+
+# 4. Make phyloseq object 
+```{r}
+samples.out <- rownames(seqtab.nochim1)
+Target <- sapply(strsplit(samples.out, "_"), `[`, 1)
+depth <- sapply(strsplit(samples.out, "_"), `[`, 2)
+version <- sapply(strsplit(samples.out, "_"), `[`, 3)
+seed <- sapply(strsplit(samples.out, "_"), `[`, 4)
+
+
+samdf <- data.frame(Sample=samples.out,
+                    Target = Target, 
+                    Depth=depth, 
+                    Version = version, 
+                    Seed = seed)
+rownames(samdf) <- samples.out
+```
+
+
+```{r}
+library(phyloseq)
+dir.create("./Phyloseq/")
+
+```
+
+
+```{r}
+
+## UNITE
+taxa0_unite <- taxa_list[["v0_unite"]]
+taxa1_unite <- taxa_list[["v1_unite"]]
+taxa2_unite <- taxa_list[["v2_unite"]]
+taxa3_unite <- taxa_list[["v3_unite"]]
+
+## Custom reference
+taxa0_custom <- taxa_list[["v0_custom"]]
+taxa1_custom <- taxa_list[["v1_custom"]]
+taxa2_custom <- taxa_list[["v2_custom"]]
+taxa3_custom <- taxa_list[["v3_custom"]]
+
+
+ps0.u <- phyloseq(otu_table(seqtab.nochim0,
+                         taxa_are_rows=FALSE),
+               sample_data(samdf),
+               tax_table(taxa0_unite))
+print(ps0.u)  # 5391 taxa and 40 samples
+saveRDS(ps0.u, "./Phyloseq/260112_ps0_unite_10rep.rds")
+
+
+ps3.u <- phyloseq(otu_table(seqtab.nochim3,
+                         taxa_are_rows=FALSE),
+               sample_data(samdf),
+               tax_table(taxa3_unite))
+print(ps3.u) #  1276 taxa and 40 samples
+saveRDS(ps3.u, "./Phyloseq/260112_ps3_unite_10rep.rds")
+
+
+ps0.c <- phyloseq(otu_table(seqtab.nochim0,
+                         taxa_are_rows=FALSE),
+               sample_data(samdf),
+               tax_table(taxa0_custom))
+print(ps0.c)  # 5391 taxa and 40 samples
+saveRDS(ps0.c, "./Phyloseq/260112_ps0_custom_10rep.rds")
+
+
+ps3.c <- phyloseq(otu_table(seqtab.nochim3,
+                         taxa_are_rows=FALSE),
+               sample_data(samdf),
+               tax_table(taxa3_custom))
+print(ps3.c) #  1276 taxa and 40 samples
+saveRDS(ps3.c, "./Phyloseq/260112_ps3_custom_10rep.rds")
+
+
+
+
+```
+
+
+
+
+```{r}
+```
+
+# 5. 시각화 
+
+```{r}
+library(RColorBrewer)
+
+ps0.u.gn   <- ps0.u %>% tax_glom("Genus") # 11 taxa and 4 samples
+ps0.c.gn   <- ps0.c %>% tax_glom("Genus") # 10 taxa and 4 samples
+ps3.u.f.gn <- ps3.u %>% tax_glom("Genus") # 10 taxa and 4 samples
+ps3.c.f.gn <- ps3.c %>% tax_glom("Genus") # 09 taxa and 4 samples
+
+
+ps0.u.gn.mt <- psmelt(ps0.u.gn)
+ps0.c.gn.mt <- psmelt(ps0.c.gn)
+ps0.u.f.gn.mt <- psmelt(ps3.u.f.gn)
+ps0.c.f.gn.mt <- psmelt(ps3.c.f.gn)
+
+ps0.u.gn.mt$Filt <- "Filter_Non"
+ps0.c.gn.mt$Filt <- "Filter_Non"
+ps0.u.f.gn.mt$Filt <- "Filter_Yes"
+ps0.c.f.gn.mt$Filt <- "Filter_Yes"
+
+
+ps0.u.gn.mt$Reference <- "UNITE"
+ps0.u.f.gn.mt$Reference <- "UNITE"
+ps0.c.gn.mt$Reference <- "Custom"
+ps0.c.f.gn.mt$Reference <- "Custom"
+
+
+df <- rbind(ps0.u.gn.mt,
+            ps0.u.f.gn.mt,
+            ps0.c.gn.mt, 
+            ps0.c.f.gn.mt)
+
+df
+```
+
+
+```{r}
+library(RColorBrewer)
+source("D:/KSY/Project/R_package_for_Microbiome/251121_microbiome_analysis_functions.R")
+
+
+ASV <- df$OTU %>% unique
+
+pp <- taxa_plot(melt = df %>% 
+                  filter(Version %in% "v1" & Reference  %in% "Custom"), 
+          taxa = "Genus", 
+          tax_otu = ASV, 
+          x_axis = "Sample", 
+          phylum_or = NULL)
+pp$plot + facet_wrap(~Reference+Filt+Target, nrow=1, scale = "free_x")
+
+ggsave("./Figures/Taxa_custom.png", width = 12, height = 4)
+
+```
+
+
+```{r}
+
+pp <- taxa_plot(melt = df %>% 
+                  filter(Version %in% "v1" & Reference  %in% "UNITE"), 
+          taxa = "Genus", 
+          tax_otu = ASV, 
+          x_axis = "Sample", 
+          phylum_or = NULL)
+pp$plot + facet_wrap(~Reference+Filt+Target, nrow=1, scale = "free_x")
+
+ggsave("./Figures/Taxa_UNITE.png", width = 12, height = 4)
+
+```
+
+
+
